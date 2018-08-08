@@ -1,0 +1,2 @@
+# SearchEditText
+EditText for SearchBar 
