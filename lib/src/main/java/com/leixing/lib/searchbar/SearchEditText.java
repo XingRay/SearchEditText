@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.HashSet;
 
 
 /**
@@ -45,6 +46,7 @@ public class SearchEditText extends MethodEditText {
 
     private SearchHandler mHandler;
     private HashMap<SearchTrigger, Boolean> mTriggerEnableMap;
+    private HashSet<Integer> mActionIds;
 
     public SearchEditText(Context context) {
         this(context, null);
@@ -58,6 +60,8 @@ public class SearchEditText extends MethodEditText {
         super(context, attrs, defStyleAttr);
 
         mHandler = new SearchHandler();
+        mActionIds = new HashSet<>();
+        registerActionId(EditorInfo.IME_ACTION_SEARCH);
 
         mTriggerEnableMap = new HashMap<>();
         mTriggerEnableMap.put(SearchTrigger.AUTO_SET_TEXT, DEFAULT_AUTO_SET_TEXT_ENABLE);
@@ -69,10 +73,10 @@ public class SearchEditText extends MethodEditText {
         setFocusableInTouchMode(true);
         setMaxLines(1);
         setImeOptions(EditorInfo.IME_ACTION_SEARCH);
-        setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        setOnEditorActionListener(new OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                if (mActionIds.contains(actionId)) {
                     performSearch(SearchTrigger.ACTION_SOFT_INPUT);
                     return true;
                 }
@@ -113,6 +117,17 @@ public class SearchEditText extends MethodEditText {
                 }
             }
         });
+    }
+
+
+    public void registerActionId(int actionId) {
+        mActionIds.add(actionId);
+    }
+
+    public void unregisterActionId(int actionId) {
+        if (mActionIds.contains(actionId)) {
+            mActionIds.remove(actionId);
+        }
     }
 
     private SearchTrigger getTrigger(Method method) {
@@ -239,7 +254,7 @@ public class SearchEditText extends MethodEditText {
         AUTO_USER_INPUT,
 
         /**
-         * 程序调用{@link android.widget.TextView#setText(CharSequence)}后，自动进入搜索
+         * 程序调用{@link TextView#setText(CharSequence)}后，自动进入搜索
          */
         AUTO_SET_TEXT,
 
@@ -249,7 +264,7 @@ public class SearchEditText extends MethodEditText {
         ACTION_SOFT_INPUT,
 
         /**
-         * 程序直接条用{@link SearchEditText#performSearch(SearchTrigger)}方法触发搜索
+         * 程序直接调用{@link SearchEditText#performSearch(SearchTrigger)}方法触发搜索
          * 一般是用户点击按钮后程序调用
          */
         ACTION_PERFORM
